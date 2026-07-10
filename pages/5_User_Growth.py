@@ -1,0 +1,67 @@
+import streamlit as st
+
+from src.components import charts, styles, tables
+from src.components.filters import current_date_filters
+from src.components.metrics import kpi_row
+from src.data import loaders
+from src.data.transforms import daily_count, filter_by_date_range, value_counts_df
+from src.services import auth_api
+
+client = auth_api.require_client()
+filters = current_date_filters()
+
+styles.page_header("User Growth", icon="👥")
+
+users = loaders.fetch_users(client)
+
+active_col = next((c for c in ("status", "active_status") if c in users.columns), None)
+if active_col == "status":
+    active_count = (users["status"] == "active").sum()
+elif active_col == "active_status":
+    active_count = (users["active_status"] == 1).sum()
+else:
+    active_count = None
+
+new_in_range = filter_by_date_range(users, "created_at", filters["from"], filters["to"]).shape[0] if not users.empty else 0
+
+kpi_row(
+    [
+        ("Total users", f"{len(users):,}"),
+        ("Active users", f"{active_count:,}" if active_count is not None else "n/a"),
+        ("New signups in range", f"{new_in_range:,}"),
+    ]
+)
+st.caption(f"'New signups' date range: {filters['from']} → {filters['to']} (change it in the sidebar)")
+
+st.divider()
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Signups over time")
+    daily = daily_count(users, "created_at", "signups")
+    if not daily.empty:
+        st.plotly_chart(charts.line_chart(daily, "day", "signups"), use_container_width=True)
+    else:
+        st.info("No signup dates available.")
+
+with col2:
+    st.subheader("Active vs inactive")
+    if active_col:
+        labels = users[active_col].map(lambda v: "active" if v in ("active", 1) else "inactive")
+        counts = labels.value_counts().reset_index()
+        counts.columns = ["state", "count"]
+        st.plotly_chart(charts.pie_chart(counts, "state", "count"), use_container_width=True)
+    else:
+        st.info("No active/inactive field available.")
+
+st.subheader("User type mix")
+type_col = next((c for c in users.columns if c.endswith("profile_type")), None)
+if type_col:
+    counts = value_counts_df(users, type_col, "type")
+    st.plotly_chart(charts.bar_chart(counts, "type", "count"), use_container_width=True)
+else:
+    st.info("No user profile-type field available.")
+
+with st.expander("Raw users"):
+    tables.paginated_table(users, key="raw_users")
+    tables.excel_download_button(users, "users.xlsx")
