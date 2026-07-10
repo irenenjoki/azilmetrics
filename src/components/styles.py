@@ -282,22 +282,165 @@ _CSS = f"""
     .azm-badge-warning {{ background: rgba(212, 140, 47, 0.14); color: {WARNING}; }}
     .azm-badge-danger {{ background: rgba(194, 59, 59, 0.12); color: {ERROR}; }}
     .azm-badge-neutral {{ background: {NEUTRAL_200}; color: {NEUTRAL_700}; }}
+
+    /* ---- Login page: modeled on AZIL-FRONTEND's real client login
+       (src/modules/client/dashboard/login/index.tsx) — a split navy/gradient hero
+       banner with a floating white card overlapping both halves, rather than a
+       boxed two-column card. ---- */
+    .azm-login-hero {{
+        display: flex;
+        min-height: 320px;
+        border-radius: 1.25rem;
+        overflow: hidden;
+    }}
+    .azm-login-hero-left {{
+        flex: 1;
+        background: {BRAND_900};
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem 3rem;
+    }}
+    .azm-login-hero-eyebrow {{
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        color: rgba(255, 255, 255, 0.7);
+    }}
+    .azm-login-hero-title {{
+        margin-top: 1rem;
+        font-size: 2.75rem;
+        font-weight: 700;
+        line-height: 1.15;
+        color: #ffffff;
+    }}
+    .azm-login-hero-desc {{
+        margin-top: 1.25rem;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.78);
+        max-width: 26rem;
+    }}
+    .azm-login-hero-right {{
+        flex: 1;
+        position: relative;
+        background: linear-gradient(135deg, {BRAND_700}, {BRAND_500});
+    }}
+    .azm-login-hero-dots {{
+        position: absolute;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.5rem;
+    }}
+    .azm-login-hero-dot {{ width: 8px; height: 8px; border-radius: 9999px; background: rgba(255, 255, 255, 0.45); }}
+    .azm-login-hero-dot.active {{ width: 28px; background: #ffffff; }}
+
+    [class*="st-key-azm_login_card_wrap"] {{
+        margin-top: -230px;
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+        padding: 0 1rem;
+    }}
+    [class*="st-key-azm_login_card"] {{
+        width: 100%;
+        max-width: 46rem;
+        min-height: 460px;
+        margin: 0 auto;
+        border-radius: 2rem;
+        border: 1px solid {NEUTRAL_300};
+        background: #ffffff;
+        box-shadow: 0 20px 60px rgba(10, 15, 44, 0.15);
+        padding: 2.5rem 3.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }}
+    .azm-login-brand {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+    }}
+    .azm-login-brand .azm-logo-mark {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, {BRAND_500}, {TEAL_400}, {ACCENT});
+        font-size: 1.3rem;
+    }}
+    .azm-login-brand .azm-wordmark {{
+        font-family: 'Instrument Sans', sans-serif;
+        font-size: 19px;
+        font-weight: 600;
+        color: {BRAND_600};
+        line-height: 1.1;
+        text-align: left;
+    }}
+    .azm-login-brand .azm-wordmark b {{ color: {BRAND_900}; font-weight: 700; }}
+    .azm-login-brand .azm-tagline {{
+        margin-top: 2px;
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: {NEUTRAL_500};
+    }}
+
+    .azm-login-eyebrow {{
+        text-align: center;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        color: {ACCENT};
+    }}
+    .azm-login-heading2 {{ margin-top: 0.6rem; text-align: center; font-size: 1.7rem; font-weight: 700; color: {BRAND_900}; }}
+    .azm-login-subtext2 {{ margin-top: 0.5rem; text-align: center; font-size: 0.9rem; color: {NEUTRAL_700}; }}
+
+    [class*="st-key-azm_login_card"] label p {{
+        text-transform: uppercase;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        color: {NEUTRAL_500} !important;
+    }}
+    [class*="st-key-azm_login_card"] input:focus {{ border-color: {BRAND_500} !important; }}
+    [class*="st-key-azm_login_card"] button[kind="primary"] {{
+        background-color: {BRAND_500} !important;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+    }}
+    [class*="st-key-azm_login_card"] button[kind="primary"]:hover {{ background-color: {BRAND_600} !important; }}
 </style>
 """
 
 
-_HIDE_SIDEBAR_TOGGLE_CSS = """
+_LOGIN_MODE_CSS = f"""
 <style>
-    [data-testid="collapsedControl"] { display: none; }
+    [data-testid="collapsedControl"] {{ display: none; }}
+    .stApp {{ background-color: {NEUTRAL_200}; }}
+    .stMainBlockContainer {{ padding-top: 2rem; }}
 </style>
 """
 
 
-def inject_global_css(hide_sidebar_toggle: bool = False) -> None:
+def inject_global_css(login_mode: bool = False) -> None:
+    """login_mode hides the (otherwise empty) sidebar toggle arrow and swaps the page
+    background to the light neutral tone AZIL-FRONTEND's client login page uses."""
     _render_html(_GOOGLE_FONTS_LINK)
     _render_html(_CSS)
-    if hide_sidebar_toggle:
-        _render_html(_HIDE_SIDEBAR_TOGGLE_CSS)
+    if login_mode:
+        _render_html(_LOGIN_MODE_CSS)
 
 
 def _render_html(html: str) -> None:
@@ -386,6 +529,53 @@ def page_header(title: str, subtitle: str | None = None, icon: str | None = None
     )
 
 
+def login_hero() -> None:
+    """Split navy/gradient hero banner above the login form, modeled on AZIL-FRONTEND's
+    real client login (src/modules/client/dashboard/login/index.tsx): a brand panel on
+    the left and a decorative panel on the right (a static gradient here in place of
+    their rotating lifestyle-photo carousel, since we don't have those image assets)."""
+    _render_html(
+        """
+        <div class="azm-login-hero">
+            <div class="azm-login-hero-left">
+                <div class="azm-login-hero-eyebrow">Analytics Portal</div>
+                <div class="azm-login-hero-title">Azil<br>Insurance</div>
+                <p class="azm-login-hero-desc">
+                    Secure access to real-time policy, payment, and performance analytics.
+                </p>
+            </div>
+            <div class="azm-login-hero-right">
+                <div class="azm-login-hero-dots">
+                    <span class="azm-login-hero-dot active"></span>
+                    <span class="azm-login-hero-dot"></span>
+                    <span class="azm-login-hero-dot"></span>
+                    <span class="azm-login-hero-dot"></span>
+                </div>
+            </div>
+        </div>
+        """
+    )
+
+
+def login_form_header() -> None:
+    """Wordmark (matching the sidebar's) + "Sign In" kicker + heading shown at the
+    top of the login form card."""
+    _render_html(
+        """
+        <div class="azm-login-brand">
+            <div class="azm-logo-mark">📊</div>
+            <div>
+                <div class="azm-wordmark">azil <b>Insurance</b></div>
+                <div class="azm-tagline">Analytics</div>
+            </div>
+        </div>
+        <div class="azm-login-eyebrow">Sign In</div>
+        <div class="azm-login-heading2">Let's get you in.</div>
+        <div class="azm-login-subtext2">It only takes a moment to continue to your analytics dashboard.</div>
+        """
+    )
+
+
 _BADGE_CLASS = {
     "success": "azm-badge-success",
     "warning": "azm-badge-warning",
@@ -398,3 +588,4 @@ def badge(text: str, tone: str = "neutral") -> str:
     """Return an inline HTML badge/chip. Embed the result in another st.markdown call."""
     css_class = _BADGE_CLASS.get(tone, _BADGE_CLASS["neutral"])
     return f'<span class="azm-badge {css_class}">{text}</span>'
+

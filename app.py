@@ -16,6 +16,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded" if authenticated else "collapsed",
 )
-styles.inject_global_css(hide_sidebar_toggle=not authenticated)
+styles.inject_global_css(login_mode=not authenticated)
 
 nav.render()

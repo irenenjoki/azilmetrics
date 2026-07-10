@@ -63,5 +63,8 @@ def render() -> None:
             date_range_filter()
             st.caption("This range applies to the KPI cards and trend charts on every page.")
 
-    styles.topbar(auth_api.current_user_display_name())
+        # Navbar only makes sense once there's a dashboard behind it — keep the login
+        # screen a clean, full hero layout with no app chrome.
+        styles.topbar(auth_api.current_user_display_name())
+
     page.run()
