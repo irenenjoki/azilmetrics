@@ -14,14 +14,19 @@ PALETTE = [BRAND_600, ACCENT, SUCCESS, WARNING, ERROR, BRAND_400]
 
 
 def _apply_theme(fig: go.Figure, title: str | None = None, show_legend: bool = False) -> go.Figure:
-    fig.update_layout(
-        title=title,
+    layout_kwargs = dict(
         colorway=PALETTE,
         plot_bgcolor="white",
         margin=dict(l=10, r=10, t=40 if title else 10, b=10),
         showlegend=show_legend,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
     )
+    # Only set `title` when there is one — passing title=None explicitly serializes as a
+    # null title in the JSON spec sent to the browser, which some Plotly.js versions
+    # render as the literal text "undefined" instead of no title at all.
+    if title:
+        layout_kwargs["title"] = title
+    fig.update_layout(**layout_kwargs)
     return fig
 
 
