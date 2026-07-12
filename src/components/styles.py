@@ -115,7 +115,7 @@ _CSS = f"""
     [data-testid="stSidebar"] {{
         background-color: {BRAND_700};
         position: fixed !important;
-        top: var(--azm-topbar-height, 4.75rem);
+        top: 0;
         left: 0;
         bottom: 0;
         height: auto;
@@ -283,7 +283,7 @@ _CSS = f"""
     .azm-topbar-fixed {{
         position: fixed;
         top: 0;
-        left: 0;
+        left: var(--azm-sidebar-width);
         right: 0;
         z-index: 999;
         height: var(--azm-topbar-height);
@@ -294,7 +294,7 @@ _CSS = f"""
         background: {BRAND_700};
         padding: 0 8rem 0 1.5rem;
     }}
-    .azm-topbar-right {{ display: flex; align-items: center; gap: 1rem; }}
+    .azm-topbar-right {{ display: flex; align-items: center; gap: 1.75rem; }}
     [class*="st-key-azm_topbar_logout"] {{
         position: fixed;
         top: calc((var(--azm-topbar-height) - 2.5rem) / 2);
@@ -338,9 +338,9 @@ _CSS = f"""
         border-radius: 9999px;
         background: currentColor;
     }}
-    .azm-topbar-identity {{ text-align: right; line-height: 1.25; }}
+    .azm-topbar-identity {{ text-align: right; line-height: 1.4; }}
     .azm-topbar-name {{ font-weight: 600; color: #ffffff; font-size: 0.85rem; }}
-    .azm-topbar-sub {{ font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); }}
+    .azm-topbar-sub {{ font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); margin-top: 0.15rem; }}
     [class*="st-key-azm_topbar_logout"] button {{
         background: {TEAL_400} !important;
         color: {BRAND_900} !important;
