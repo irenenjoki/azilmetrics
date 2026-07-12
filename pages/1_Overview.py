@@ -9,15 +9,24 @@ from src.services import auth_api
 
 client = auth_api.require_client()
 filters = current_date_filters()
+styles.page_header("Azil · Motor Policies · Standard Overview", color=styles.TEAL_400)
 
 styles.page_header(
-    "Overview", icon="📊", subtitle=f"Date range: {filters['from']} → {filters['to']} (change it in the sidebar)"
+    "Overview", icon=styles.logo_icon_html(), subtitle=f"Date range: {filters['from']} → {filters['to']} (change it in the sidebar)"
 )
+user_status = st.segmented_control("User status", ["All Users", "Active Only", "Inactive Only"], default="All Users")
 
 cover_trends = loaders.fetch_cover_trends(client, filters)
 income_trends = loaders.fetch_income_trends(client, filters)
 agent_ranks = loaders.fetch_agent_ranks(client, filters)
 product_sales = loaders.fetch_product_sales(client, filters)
+users = loaders.fetch_users(client)
+
+active_col = next((c for c in ("status", "active_status") if c in users.columns), None)
+if user_status == "Active Only" and active_col:
+    users = users[users[active_col].isin(["active", 1])]
+elif user_status == "Inactive Only" and active_col:
+    users = users[~users[active_col].isin(["active", 1])]
 
 cover_totals = cover_trends.get("totals", {}) or {}
 income_totals = income_trends.get("totals", {}) or {}
@@ -26,7 +35,8 @@ kpi_row(
     [
         ("Policies (covers)", f"{cover_totals.get('count', 0):,}"),
         ("Premium volume (KES)", f"{cover_totals.get('amount', 0):,.0f}"),
-        ("Income (KES)", f"{income_totals.get('income', 0):,.0f}"),
+        ("Azil Income (KES)", f"{income_totals.get('income', 0):,.0f}"),
+        ("Users", f"{len(users):,}"),
     ]
 )
 
@@ -43,7 +53,7 @@ with left:
         if value_col:
             tdf[date_col] = pd.to_datetime(tdf[date_col], errors="coerce")
             tdf = tdf.sort_values(date_col)
-            st.plotly_chart(charts.line_chart(tdf, date_col, value_col), use_container_width=True)
+            st.plotly_chart(charts.line_chart(tdf, date_col, value_col), use_container_width=True, key="revenue_trend")
     else:
         st.info("No income trend data for this date range.")
 
@@ -51,7 +61,7 @@ with right:
     st.subheader("Top agents by premium")
     if not agent_ranks.empty and "premium" in agent_ranks.columns:
         top_agents = agent_ranks.sort_values("premium", ascending=False).head(10)
-        st.plotly_chart(charts.bar_chart(top_agents, "premium", "name", orientation="h"), use_container_width=True)
+        st.plotly_chart(charts.bar_chart(top_agents, "premium", "name", orientation="h"), use_container_width=True, key="top_agents")
     else:
         st.info("No agent ranking data for this date range.")
 

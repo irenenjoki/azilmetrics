@@ -1,4 +1,4 @@
-2026-07-11 20:46:28.009 Uvicorn server started on :::8501
+2026-07-12 00:35:29.649 Uvicorn server started on :::8501
 
   You can now view your Streamlit app in your browser.
 
@@ -6,3 +6,37 @@
   Network URL: http://192.168.100.37:8501
   External URL: http://102.205.238.2:8501
 
+2026-07-12 00:36:43.324 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-07-12 00:36:43.391 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-07-12 00:36:43.398 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-07-12 00:47:18.696 Uncaught app execution
+Traceback (most recent call last):
+  File "C:\Users\Admin\Desktop\azil-metrics\venv\Lib\site-packages\streamlit\runtime\scriptrunner\exec_code.py", line 129, in exec_func_with_error_handling
+    result = func()
+  File "C:\Users\Admin\Desktop\azil-metrics\venv\Lib\site-packages\streamlit\runtime\scriptrunner\script_runner.py", line 795, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Desktop\azil-metrics\app.py", line 21, in <module>
+    nav.render()
+    ~~~~~~~~~~^^
+  File "C:\Users\Admin\Desktop\azil-metrics\src\components\nav.py", line 96, in render
+    page.run()
+    ~~~~~~~~^^
+  File "C:\Users\Admin\Desktop\azil-metrics\venv\Lib\site-packages\streamlit\navigation\page.py", line 490, in run
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\Desktop\azil-metrics\pages\6_Customer_Analysis.py", line 8, in <module>
+    from src.data.transforms import filter_by_date_range, find_customer_id_column, link_customers_via_vehicles
+ImportError: cannot import name 'link_customers_via_vehicles' from 'src.data.transforms' (C:\Users\Admin\Desktop\azil-metrics\src\data\transforms.py)

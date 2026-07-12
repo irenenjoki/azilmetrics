@@ -12,7 +12,7 @@ authenticated = auth_api.is_authenticated()
 
 st.set_page_config(
     page_title=settings.app_name,
-    page_icon="📊",
+    page_icon=str(styles.LOGO_PATH),
     layout="wide",
     initial_sidebar_state="expanded" if authenticated else "collapsed",
 )

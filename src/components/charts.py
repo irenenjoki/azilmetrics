@@ -38,15 +38,29 @@ def line_chart(df: pd.DataFrame, x: str, y: str, title: str | None = None) -> go
     return _apply_theme(fig, title, show_legend=False)
 
 
-def bar_chart(df: pd.DataFrame, x: str, y: str, orientation: str = "v", title: str | None = None) -> go.Figure:
+def bar_chart(
+    df: pd.DataFrame, x: str, y: str, orientation: str = "v", title: str | None = None, show_values: bool = False
+) -> go.Figure:
     # Same single-series reasoning as line_chart — no legend needed or safe to show.
     fig = px.bar(df, x=x, y=y, orientation=orientation)
     if orientation == "h":
         fig.update_layout(yaxis={"categoryorder": "total ascending"})
+    if show_values:
+        value_col = x if orientation == "h" else y
+        fig.update_traces(text=df[value_col], texttemplate="%{text:,}", textposition="outside")
     return _apply_theme(fig, title, show_legend=False)
 
 
-def pie_chart(df: pd.DataFrame, names: str, values: str, title: str | None = None) -> go.Figure:
+def pie_chart(df: pd.DataFrame, names: str, values: str, title: str | None = None, donut: bool = False) -> go.Figure:
     # Pie slices get real category names from the `names` column, so the legend is safe here.
-    fig = px.pie(df, names=names, values=values, color_discrete_sequence=PALETTE)
+    fig = px.pie(df, names=names, values=values, color_discrete_sequence=PALETTE, hole=0.55 if donut else 0)
+    if donut:
+        fig.update_traces(textinfo="percent", textposition="inside")
+    return _apply_theme(fig, title, show_legend=True)
+
+
+def stacked_bar_chart(df: pd.DataFrame, x: str, y: str, color: str, title: str | None = None) -> go.Figure:
+    """Multi-series bar chart (e.g. count-per-month split by channel) — real category
+    names come from the `color` column, so the legend is safe here, unlike bar_chart()."""
+    fig = px.bar(df, x=x, y=y, color=color, color_discrete_sequence=PALETTE, barmode="stack")
     return _apply_theme(fig, title, show_legend=True)

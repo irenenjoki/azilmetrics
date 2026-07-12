@@ -8,7 +8,28 @@ the same product family.
 """
 from __future__ import annotations
 
+import base64
+from pathlib import Path
+
 import streamlit as st
+
+LOGO_PATH = Path(__file__).resolve().parent.parent.parent / "assets" / "azil_logo.jpeg"
+
+
+@st.cache_resource(show_spinner=False)
+def _logo_data_uri() -> str:
+    """AZIL's real logo mark (copied from AZIL-FRONTEND's public/azilLogo.jpeg, the same
+    file its own admin SideNav uses), base64-embedded so it renders inside our HTML/CSS
+    design system without needing Streamlit's static-file-serving config."""
+    encoded = base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
+    return f"data:image/jpeg;base64,{encoded}"
+
+
+def logo_icon_html() -> str:
+    """<img> tag for AZIL's real logo mark, sized to drop into page_header()'s `icon`
+    slot in place of a placeholder emoji — icon is inserted as raw HTML there."""
+    return f'<img src="{_logo_data_uri()}" alt="Azil Insurance">'
+
 
 # --- Brand palette (from AZIL-FRONTEND src/styles/global.css @theme block) ---
 BRAND_900 = "#0A0F2C"
@@ -63,9 +84,46 @@ _CSS = f"""
     [data-testid="stMetricValue"] {{ color: {KPI_VALUE_COLOR}; }}
     h1, h2, h3 {{ color: {HEADING_COLOR}; }}
 
-    /* ---- Sidebar: styled after AZIL-FRONTEND's admin SideNav (bg-brand-700) ---- */
+    /* Hide only Streamlit's native Deploy button / "..." menu — our own topbar (see
+       .azm-topbar-fixed below) replaces them as a fixed, full-bleed bar spanning the
+       whole viewport width above BOTH the sidebar and the content. Keep the header shell
+       itself (transparent, no visible chrome) rather than display:none-ing it outright,
+       since other native controls live inside it. */
+    [data-testid="stToolbar"] {{ display: none; }}
+    [data-testid="stHeader"] {{ background: transparent; z-index: 1001; pointer-events: none; }}
+
+    /* Sidebar is a permanent fixture, not a collapsible panel — removes the whole class
+       of "collapsed with no way back" bugs entirely instead of chasing z-index/testid
+       fixes for Streamlit's own toggle. No arrows, no toggle button, ever. */
+    [data-testid="stSidebarCollapseButton"] {{ display: none !important; }}
+    :root {{ --azm-sidebar-width: 13.5rem; }}
+    [data-testid="stSidebar"][aria-expanded] {{
+        transform: none !important;
+        visibility: visible !important;
+    }}
+    .stMainBlockContainer {{
+        padding-top: calc(var(--azm-topbar-height, 4.75rem) + 1.25rem) !important;
+        margin-left: var(--azm-sidebar-width) !important;
+        width: calc(100% - var(--azm-sidebar-width)) !important;
+        max-width: calc(100% - var(--azm-sidebar-width)) !important;
+        box-sizing: border-box !important;
+    }}
+
+    /* ---- Sidebar: styled after AZIL-FRONTEND's admin SideNav (bg-brand-700). Fixed to
+       the viewport (stays put while page content scrolls) with its own internal scroll,
+       so a long nav list never gets clipped on shorter screens. ---- */
     [data-testid="stSidebar"] {{
         background-color: {BRAND_700};
+        position: fixed !important;
+        top: var(--azm-topbar-height, 4.75rem);
+        left: 0;
+        bottom: 0;
+        height: auto;
+        width: var(--azm-sidebar-width) !important;
+        min-width: var(--azm-sidebar-width) !important;
+        max-width: var(--azm-sidebar-width) !important;
+        overflow-y: auto;
+        z-index: 998;
     }}
     [data-testid="stSidebar"] * {{ color: rgba(255, 255, 255, 0.85); }}
     [data-testid="stSidebar"] h1,
@@ -75,19 +133,25 @@ _CSS = f"""
 
     /* Custom nav rows — built via st.page_link() + st.container(key=...) since the
        automatic st.navigation() widget can't be reordered relative to our own sidebar
-       content. Active/inactive state is decided in Python (nav.py), not guessed in CSS. */
-    [class*="st-key-azmnavitem"] {{ border-radius: 0.75rem; margin: 0.1rem 0; transition: background-color 0.15s ease; }}
-    [class*="st-key-azmnavitem"]:hover {{ background-color: rgba(255, 255, 255, 0.1); }}
-    [class*="st-key-azmnavitem"] [data-testid="stPageLink"] p {{ color: rgba(255, 255, 255, 0.75); font-size: 0.92rem; }}
-    [class*="st-key-azmnavitem"]:hover [data-testid="stPageLink"] p {{ color: #ffffff; }}
+       content. Keys stay stable across reruns (azmnav_0, azmnav_1, ...) regardless of
+       which page is active — active styling is driven by a marker span each row
+       conditionally renders, matched here via :has(), rather than by changing the key
+       itself (a changing key loses widget identity between reruns and can blank the
+       whole sidebar out). */
+    [class*="st-key-azmnav_"] {{ border-radius: 0.75rem; margin: 0.1rem 0; transition: background-color 0.15s ease; }}
+    [class*="st-key-azmnav_"]:hover {{ background-color: rgba(255, 255, 255, 0.1); }}
+    [class*="st-key-azmnav_"] [data-testid="stPageLink"] p {{ color: rgba(255, 255, 255, 0.75); font-size: 0.92rem; }}
+    [class*="st-key-azmnav_"]:hover [data-testid="stPageLink"] p {{ color: #ffffff; }}
 
-    [class*="st-key-azmnavactive"] {{
-        border-radius: 0.75rem;
-        margin: 0.1rem 0;
+    [class*="st-key-azmnav_"]:has(.azm-nav-active-marker) {{
         background: linear-gradient(to right, {BRAND_600}, {BRAND_500});
         box-shadow: 0 4px 10px rgba(10, 15, 44, 0.25);
     }}
-    [class*="st-key-azmnavactive"] [data-testid="stPageLink"] p {{ color: #ffffff; font-weight: 600; font-size: 0.92rem; }}
+    [class*="st-key-azmnav_"]:has(.azm-nav-active-marker) [data-testid="stPageLink"] p {{
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.92rem;
+    }}
 
     /* Logged-in identity card + logout row */
     .azm-sidebar-user-card {{
@@ -162,20 +226,31 @@ _CSS = f"""
         display: flex;
         align-items: center;
         gap: 0.6rem;
-        padding: 0.25rem 0 1rem 0;
+        padding: 0 0 1rem 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         margin-bottom: 0.75rem;
+    }}
+    .azm-sidebar-section {{
+        margin: 0.9rem 0.5rem 0.35rem 0.5rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: rgba(255, 255, 255, 0.4);
     }}
     .azm-sidebar-brand .azm-logo-mark {{
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
+        width: 52px;
+        height: 62px;
+    }}
+    .azm-sidebar-brand .azm-logo-mark img {{
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         border-radius: 0.75rem;
         border: 1px solid rgba(255, 255, 255, 0.15);
-        background: linear-gradient(135deg, {BRAND_500}, {TEAL_400}, {ACCENT});
-        font-size: 1.3rem;
     }}
     .azm-sidebar-brand .azm-wordmark {{
         font-family: 'Instrument Sans', sans-serif;
@@ -194,50 +269,104 @@ _CSS = f"""
         color: rgba(255, 255, 255, 0.6);
     }}
 
-    /* ---- Top navbar: styled after AZIL-FRONTEND's admin Header ---- */
-    .azm-navbar {{
+    /* ---- Top navbar: fixed, full-bleed dark bar spanning the whole viewport width
+       above BOTH the sidebar and the content (matching the ibima reference's header
+       row, which sits above its sidebar rather than beside it) — section label on the
+       left, connection status + identity cluster on the right. Rendered as one plain
+       HTML block (not st.columns) so it isn't subject to Streamlit's own internal
+       max-width/flex-basis rules on its grid wrapper — those fought our earlier
+       column-based layout and either clipped content or blew a single column up to
+       fill the whole bar. The Sign Out button is a separate, independently
+       fixed-positioned real widget (see [class*="st-key-azm_topbar_logout"] below)
+       overlaid in the same bar rather than living inside this HTML. ---- */
+    :root {{ --azm-topbar-height: 4.75rem; }}
+    .azm-topbar-fixed {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        height: var(--azm-topbar-height);
+        box-sizing: border-box;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid {NEUTRAL_300};
-        padding: 0.3rem 0.1rem;
-        margin-bottom: 0.5rem;
+        background: {BRAND_700};
+        padding: 0 8rem 0 1.5rem;
     }}
-    .azm-navbar .azm-welcome {{
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: {BRAND_700};
+    .azm-topbar-right {{ display: flex; align-items: center; gap: 1rem; }}
+    [class*="st-key-azm_topbar_logout"] {{
+        position: fixed;
+        top: calc((var(--azm-topbar-height) - 2.5rem) / 2);
+        right: 1.5rem;
+        z-index: 1000;
     }}
-    .azm-navbar .azm-welcome b {{ color: {BRAND_900}; font-weight: 600; }}
-    .azm-navbar .azm-profile {{
-        display: flex;
+    [data-testid="stSidebarContent"] {{ padding-top: 0 !important; }}
+    [data-testid="stSidebarUserContent"] {{ padding-top: 0 !important; }}
+    .azm-topbar-label {{
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: rgba(255, 255, 255, 0.6);
+    }}
+    .azm-topbar-badge {{
+        display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-    }}
-    .azm-navbar .azm-avatar-wrap {{ position: relative; display: inline-flex; }}
-    .azm-navbar .azm-avatar {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 26px;
+        padding: 0.3rem 0.75rem;
         border-radius: 9999px;
-        background: {BRAND_100};
-        color: {BRAND_700};
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+    }}
+    .azm-topbar-badge-connected {{
+        background: rgba(46, 158, 111, 0.16);
+        border: 1px solid rgba(46, 158, 111, 0.5);
+        color: #6FD6A6;
+    }}
+    .azm-topbar-badge-offline {{
+        background: rgba(194, 59, 59, 0.16);
+        border: 1px solid rgba(194, 59, 59, 0.5);
+        color: #E48B8B;
+    }}
+    .azm-topbar-dot {{
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: currentColor;
+    }}
+    .azm-topbar-identity {{ text-align: right; line-height: 1.25; }}
+    .azm-topbar-name {{ font-weight: 600; color: #ffffff; font-size: 0.85rem; }}
+    .azm-topbar-sub {{ font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); }}
+    [class*="st-key-azm_topbar_logout"] button {{
+        background: {TEAL_400} !important;
+        color: {BRAND_900} !important;
+        border: none !important;
+        border-radius: 9999px !important;
+        font-weight: 700 !important;
+        font-size: 0.78rem !important;
+    }}
+    [class*="st-key-azm_topbar_logout"] button:hover {{ background: {TEAL_500} !important; }}
+    [class*="st-key-azm_topbar_logout"] button p {{ color: {BRAND_900} !important; }}
+
+    /* Filter widgets — segmented_control labels styled as small uppercase-tracked
+       captions (matching the "POLICY STATUS" / "PAYMENT STATUS" look), and real
+       st.tabs() given a brand-colored active-tab underline instead of the default. */
+    [data-testid="stSegmentedControl"] > label > div > p {{
+        text-transform: uppercase;
+        font-size: 0.68rem;
         font-weight: 700;
-        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: {NEUTRAL_500};
     }}
-    .azm-navbar .azm-profile-name {{ font-weight: 500; color: {BRAND_900}; font-size: 0.8rem; }}
-    .azm-navbar .azm-status-dot {{
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 7px;
-        height: 7px;
-        border-radius: 9999px;
-        background: {SUCCESS};
-        border: 2px solid #ffffff;
+    [data-testid="stTabs"] [aria-selected="true"] {{
+        color: {BRAND_600} !important;
+        border-bottom-color: {BRAND_600} !important;
     }}
+    [data-testid="stTabs"] [data-baseweb="tab-highlight"] {{ background-color: {BRAND_600} !important; }}
 
     /* Page header */
     .azm-page-header {{
@@ -247,6 +376,7 @@ _CSS = f"""
         margin-bottom: 1.25rem;
     }}
     .azm-page-header .azm-icon {{ font-size: 1.9rem; line-height: 1; }}
+    .azm-page-header .azm-icon img {{ width: 1.9rem; height: 1.9rem; object-fit: contain; display: block; }}
     .azm-page-title {{ font-size: 1.9rem; font-weight: 700; color: {HEADING_COLOR}; margin: 0; line-height: 1.2; }}
     .azm-page-subtitle {{ color: {NEUTRAL_500}; font-size: 0.9rem; margin-top: 0.15rem; }}
 
@@ -269,6 +399,20 @@ _CSS = f"""
     }}
     .azm-kpi-value {{ font-size: 1.75rem; font-weight: 700; color: {KPI_VALUE_COLOR}; }}
     .azm-kpi-sub {{ font-size: 0.75rem; color: {NEUTRAL_500}; margin-top: 0.3rem; }}
+
+    /* Styled table (st.table, used for short summary tables — see tables.styled_table) */
+    [data-testid="stTable"] table {{ border-collapse: collapse; width: 100%; }}
+    [data-testid="stTable"] thead th {{
+        background-color: {BRAND_700} !important;
+        color: #ffffff !important;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        padding: 0.6rem 0.9rem !important;
+    }}
+    [data-testid="stTable"] tbody td {{ padding: 0.55rem 0.9rem !important; border-bottom: 1px solid {NEUTRAL_200}; }}
+    [data-testid="stTable"] tbody tr:nth-child(even) {{ background-color: {NEUTRAL_100}; }}
 
     /* Badges */
     .azm-badge {{
@@ -372,11 +516,15 @@ _CSS = f"""
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
+        width: 52px;
+        height: 62px;
+    }}
+    .azm-login-brand .azm-logo-mark img {{
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         border-radius: 0.75rem;
-        background: linear-gradient(135deg, {BRAND_500}, {TEAL_400}, {ACCENT});
-        font-size: 1.3rem;
+        border: 1px solid {NEUTRAL_300};
     }}
     .azm-login-brand .azm-wordmark {{
         font-family: 'Instrument Sans', sans-serif;
@@ -427,9 +575,15 @@ _CSS = f"""
 
 _LOGIN_MODE_CSS = f"""
 <style>
-    [data-testid="collapsedControl"] {{ display: none; }}
+    [data-testid="stSidebarCollapseButton"] {{ display: none !important; }}
+    [data-testid="stSidebar"] {{ display: none !important; }}
     .stApp {{ background-color: {NEUTRAL_200}; }}
-    .stMainBlockContainer {{ padding-top: 2rem; }}
+    .stMainBlockContainer {{
+        padding-top: 2rem !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }}
 </style>
 """
 
@@ -459,7 +613,7 @@ def sidebar_brand(tagline: str = "Analytics") -> None:
     _render_html(
         f"""
         <div class="azm-sidebar-brand">
-            <div class="azm-logo-mark">📊</div>
+            <div class="azm-logo-mark"><img src="{_logo_data_uri()}" alt="Azil Insurance"></div>
             <div>
                 <div class="azm-wordmark">azil <b>Insurance</b></div>
                 <div class="azm-tagline">{tagline}</div>
@@ -492,19 +646,29 @@ def sidebar_user_card(name: str | None, email: str | None = None) -> None:
     )
 
 
-def topbar(welcome_name: str | None = None) -> None:
-    """Top navbar matching AZIL's admin Header.tsx — welcome text + profile chip."""
-    welcome = f"Welcome, <b>{welcome_name}</b>" if welcome_name else "Azil Insurance Analytics"
-    initial = (welcome_name or "A")[:1].upper()
+def topbar(
+    name: str | None,
+    subtext: str | None = None,
+    connected: bool = True,
+    label: str = "Analytics",
+) -> None:
+    """Fixed, full-bleed topbar matching the ibima reference's Header: section label on
+    the left, connection status + identity on the right. Rendered as one plain HTML block
+    (not st.columns) — see the .azm-topbar-fixed CSS comment for why. The Sign Out button
+    is a separate real widget the caller renders after this, independently positioned via
+    CSS to land in the same bar without needing a Streamlit column grid."""
+    state = "connected" if connected else "offline"
+    status_text = "Connected" if connected else "Offline"
+    sub_html = f'<div class="azm-topbar-sub">{subtext}</div>' if subtext else ""
     _render_html(
         f"""
-        <div class="azm-navbar">
-            <div class="azm-welcome">{welcome}</div>
-            <div class="azm-profile">
-                <span class="azm-profile-name">{welcome_name or ""}</span>
-                <div class="azm-avatar-wrap">
-                    <div class="azm-avatar">{initial}</div>
-                    <span class="azm-status-dot"></span>
+        <div class="azm-topbar-fixed">
+            <div class="azm-topbar-label">{label}</div>
+            <div class="azm-topbar-right">
+                <div class="azm-topbar-badge azm-topbar-badge-{state}"><span class="azm-topbar-dot"></span>{status_text}</div>
+                <div class="azm-topbar-identity">
+                    <div class="azm-topbar-name">{name or "Admin"}</div>
+                    {sub_html}
                 </div>
             </div>
         </div>
@@ -512,16 +676,21 @@ def topbar(welcome_name: str | None = None) -> None:
     )
 
 
-def page_header(title: str, subtitle: str | None = None, icon: str | None = None) -> None:
-    """Custom HTML/CSS page header used at the top of every page instead of st.title."""
+def page_header(title: str, subtitle: str | None = None, icon: str | None = None, color: str | None = None) -> None:
+    """Custom HTML/CSS page header used at the top of every page instead of st.title.
+
+    `color` overrides just this call's title color inline, leaving the shared
+    .azm-page-title class (and every other page's title) untouched.
+    """
     icon_html = f'<span class="azm-icon">{icon}</span>' if icon else ""
     subtitle_html = f'<div class="azm-page-subtitle">{subtitle}</div>' if subtitle else ""
+    color_style = f' style="color: {color};"' if color else ""
     _render_html(
         f"""
         <div class="azm-page-header">
             {icon_html}
             <div>
-                <div class="azm-page-title">{title}</div>
+                <div class="azm-page-title"{color_style}>{title}</div>
                 {subtitle_html}
             </div>
         </div>
@@ -561,9 +730,9 @@ def login_form_header() -> None:
     """Wordmark (matching the sidebar's) + "Sign In" kicker + heading shown at the
     top of the login form card."""
     _render_html(
-        """
+        f"""
         <div class="azm-login-brand">
-            <div class="azm-logo-mark">📊</div>
+            <div class="azm-logo-mark"><img src="{_logo_data_uri()}" alt="Azil Insurance"></div>
             <div>
                 <div class="azm-wordmark">azil <b>Insurance</b></div>
                 <div class="azm-tagline">Analytics</div>

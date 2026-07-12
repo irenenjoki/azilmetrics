@@ -8,7 +8,7 @@ import streamlit as st
 
 from src.utils.formatting import hex_rgba
 
-from .styles import ACCENT_MUTED, BRAND_100, ERROR, SUCCESS, TEAL_300
+from .styles import ACCENT_MUTED, BRAND_100, ERROR, SUCCESS, TEAL_300, _render_html
 
 _GRADIENTS = [BRAND_100, hex_rgba(SUCCESS, 0.12), ACCENT_MUTED, hex_rgba(TEAL_300, 0.3), hex_rgba(ERROR, 0.1)]
 
@@ -21,13 +21,12 @@ def kpi_row(items: list[tuple[str, str]], subtitles: list[str] | None = None) ->
         gradient = _GRADIENTS[i % len(_GRADIENTS)]
         sub_html = f'<div class="azm-kpi-sub">{sub}</div>' if sub else ""
         with col:
-            st.markdown(
+            _render_html(
                 f"""
                 <div class="azm-kpi-card" style="--azm-grad-from: {gradient};">
                     <div class="azm-kpi-label">{label}</div>
                     <div class="azm-kpi-value">{value}</div>
                     {sub_html}
                 </div>
-                """,
-                unsafe_allow_html=True,
+                """
             )

@@ -66,3 +66,69 @@ def fetch_agent_ranks(_client: AzilClient, filters: dict) -> pd.DataFrame:
 @st.cache_data(ttl=120, show_spinner="Loading product sales...")
 def fetch_product_sales(_client: AzilClient, filters: dict) -> pd.DataFrame:
     return records_to_df(unwrap(_client.get("/dashboard/product-sales", params=filters)) or [])
+
+
+@st.cache_data(ttl=120, show_spinner="Loading expiration trends...")
+def fetch_expiration_trends(_client: AzilClient, filters: dict) -> dict:
+    return unwrap(_client.get("/dashboard/expiration-trends", params=filters)) or {}
+
+
+@st.cache_data(ttl=120, show_spinner="Loading renewal trends...")
+def fetch_renewal_trends(_client: AzilClient, filters: dict) -> dict:
+    return unwrap(_client.get("/dashboard/renewal-trends", params=filters)) or {}
+
+
+@st.cache_data(ttl=120, show_spinner="Loading underwriter rankings...")
+def fetch_underwriter_ranks(_client: AzilClient, filters: dict) -> pd.DataFrame:
+    # Unlike agent-ranks, this endpoint has no confirmed usage anywhere in AZIL-FRONTEND's
+    # own code, so it may not be wired to real data on this backend — fail soft rather than
+    # crash the page, since Underwriter Reports also derives rankings from underwriter-trends.
+    try:
+        return records_to_df(unwrap(_client.get("/dashboard/underwriter-ranks", params=filters)) or [])
+    except ApiError:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=120, show_spinner="Loading underwriter trends...")
+def fetch_underwriter_trends(_client: AzilClient, filters: dict) -> dict:
+    return unwrap(_client.get("/dashboard/underwriter-trends", params=filters)) or {}
+
+
+@st.cache_data(ttl=180, show_spinner="Loading WhatsApp sessions...")
+def fetch_whatsapp_sessions(_client: AzilClient, filters: dict | None = None) -> pd.DataFrame:
+    try:
+        return records_to_df(_client.get_all_pages("/whatsapp/sessions/", params=filters))
+    except ApiError:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=180, show_spinner="Loading WhatsApp session insights...")
+def fetch_whatsapp_insights(_client: AzilClient, filters: dict) -> dict:
+    try:
+        return unwrap(_client.get("/whatsapp/sessions/insights", params=filters)) or {}
+    except ApiError:
+        return {}
+
+
+@st.cache_data(ttl=180, show_spinner="Loading USSD sessions...")
+def fetch_ussd_sessions(_client: AzilClient, filters: dict | None = None) -> pd.DataFrame:
+    try:
+        return records_to_df(_client.get_all_pages("/ussd/sessions/", params=filters))
+    except ApiError:
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=180, show_spinner="Loading USSD session insights...")
+def fetch_ussd_insights(_client: AzilClient, filters: dict) -> dict:
+    try:
+        return unwrap(_client.get("/ussd/sessions/insights", params=filters)) or {}
+    except ApiError:
+        return {}
+
+
+@st.cache_data(ttl=300, show_spinner="Loading audit logs...")
+def fetch_audit_logs(_client: AzilClient, filters: dict | None = None) -> pd.DataFrame:
+    try:
+        return records_to_df(_client.get_all_pages("/audit-logs/", params=filters))
+    except ApiError:
+        return pd.DataFrame()
