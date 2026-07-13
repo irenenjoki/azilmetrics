@@ -64,3 +64,35 @@ def stacked_bar_chart(df: pd.DataFrame, x: str, y: str, color: str, title: str |
     names come from the `color` column, so the legend is safe here, unlike bar_chart()."""
     fig = px.bar(df, x=x, y=y, color=color, color_discrete_sequence=PALETTE, barmode="stack")
     return _apply_theme(fig, title, show_legend=True)
+
+
+def sparkline(df: pd.DataFrame, x: str, y: str, color: str | None = None) -> go.Figure:
+    """Tiny axis-less trend line for KPI cards — no theme/legend/margin, just the shape."""
+    fig = px.line(df, x=x, y=y)
+    fig.update_traces(line_color=color or PRIMARY, line_width=2)
+    fig.update_xaxes(visible=False, showgrid=False)
+    fig.update_yaxes(visible=False, showgrid=False)
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        height=42,
+    )
+    return fig
+
+
+def donut_with_center(df: pd.DataFrame, names: str, values: str, center_label: str, center_value: str) -> go.Figure:
+    """Donut chart with a total annotated in the middle — used for "Top agents by
+    premium" style breakdowns where the whole ring represents one grand total."""
+    fig = pie_chart(df, names, values, donut=True)
+    # No on-slice text or built-in legend — a custom legend (with %-of-total) sits
+    # alongside this chart instead, so both would just be redundant here.
+    fig.update_traces(textinfo="none")
+    fig.update_layout(showlegend=False)
+    fig.add_annotation(
+        text=f"<b>{center_value}</b><br><span style='font-size:11px;color:#7C7A8A'>{center_label}</span>",
+        showarrow=False,
+        font=dict(size=18),
+    )
+    return fig

@@ -77,11 +77,31 @@ def extract_trend_df(payload: dict, value_candidates: tuple[str, ...] = ("count"
 
 
 def resample_period(df: pd.DataFrame, granularity: str = "month") -> pd.DataFrame:
-    """Aggregate an (period, value) trend DataFrame (see extract_trend_df) up to month/year buckets."""
+    """Aggregate an (period, value) trend DataFrame (see extract_trend_df) up to day/week/month/year buckets."""
     if df.empty or "period" not in df.columns:
         return df
-    freq = {"month": "MS", "year": "YS"}.get(granularity, "MS")
+    freq = {"day": "D", "week": "W-MON", "month": "MS", "year": "YS"}.get(granularity, "MS")
     return df.set_index("period").resample(freq)["value"].sum().reset_index()
+
+
+def previous_period(date_from: str, date_to: str) -> dict[str, str]:
+    """The date range immediately preceding [date_from, date_to], of the same length —
+    e.g. for a 31-day range, the 31 days right before it. Used to compute "vs previous
+    period" KPI trend percentages."""
+    d_from = pd.Timestamp(date_from)
+    d_to = pd.Timestamp(date_to)
+    span = (d_to - d_from).days + 1
+    prev_to = d_from - pd.Timedelta(days=1)
+    prev_from = prev_to - pd.Timedelta(days=span - 1)
+    return {"from": prev_from.strftime("%Y-%m-%d"), "to": prev_to.strftime("%Y-%m-%d")}
+
+
+def pct_change(current: float, previous: float) -> float | None:
+    """Percentage change from `previous` to `current`, or None if `previous` is 0/falsy
+    (a percentage change from zero is undefined, not infinite or zero)."""
+    if not previous:
+        return None
+    return (current - previous) / previous * 100
 
 
 def flatten_underwriter_trends(payload: dict) -> pd.DataFrame:

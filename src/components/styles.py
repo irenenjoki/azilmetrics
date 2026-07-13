@@ -13,6 +13,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from src.utils.formatting import hex_rgba
+
 LOGO_PATH = Path(__file__).resolve().parent.parent.parent / "assets" / "azil_logo.jpeg"
 
 
@@ -364,6 +366,10 @@ _CSS = f"""
         letter-spacing: 0.1em;
         color: {NEUTRAL_500};
     }}
+    /* Keep all options in one row instead of wrapping onto multiple lines when the
+       widget sits in a narrow column (e.g. Overview's right-aligned "User status"). */
+    [data-testid="stSegmentedControl"] [role="radiogroup"] {{ flex-wrap: nowrap; }}
+    [data-testid="stSegmentedControl"] label {{ white-space: nowrap; }}
     [data-testid="stTabs"] [aria-selected="true"] {{
         color: {BRAND_600} !important;
         border-bottom-color: {BRAND_600} !important;
@@ -401,6 +407,46 @@ _CSS = f"""
     }}
     .azm-kpi-value {{ font-size: 1.75rem; font-weight: 700; color: {KPI_VALUE_COLOR}; }}
     .azm-kpi-sub {{ font-size: 0.75rem; color: {NEUTRAL_500}; margin-top: 0.3rem; }}
+
+    /* Icon-badged KPI cards with a trend sparkline (metrics.kpi_cards_with_trend) — the
+       container itself (not an inner div) carries the card chrome, since a live Plotly
+       sparkline has to be a separate st.plotly_chart call and can't be embedded in the
+       raw HTML string alongside the icon/label/value/trend markup. */
+    [class*="st-key-azmkpiv2_"] {{
+        border-radius: 0.75rem;
+        border: 1px solid {NEUTRAL_200};
+        padding: 1.1rem 1.25rem 0.4rem 1.25rem;
+        box-shadow: 0 1px 2px rgba(10, 15, 44, 0.05);
+        background: #ffffff;
+    }}
+    /* Each KPI card gets its own tint (matching its icon's color family) rather than a
+       flat white background — targeted by column position since a real st.container()
+       can't take an inline style the way the old kpi_row()'s HTML-only cards could. */
+    [data-testid="stColumn"]:nth-of-type(1) [class*="st-key-azmkpiv2_"] {{ background: {hex_rgba("#2563EB", 0.07)}; }}
+    [data-testid="stColumn"]:nth-of-type(2) [class*="st-key-azmkpiv2_"] {{ background: {hex_rgba("#16A34A", 0.07)}; }}
+    [data-testid="stColumn"]:nth-of-type(3) [class*="st-key-azmkpiv2_"] {{ background: {hex_rgba("#EA580C", 0.08)}; }}
+    [data-testid="stColumn"]:nth-of-type(4) [class*="st-key-azmkpiv2_"] {{ background: {hex_rgba("#0891B2", 0.08)}; }}
+    .azm-kpi-icon {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 9999px;
+        font-size: 1.15rem;
+        margin-bottom: 0.6rem;
+    }}
+    .azm-kpi-trend {{ font-size: 0.78rem; font-weight: 600; margin-top: 0.35rem; }}
+    .azm-kpi-trend-label {{ font-size: 0.72rem; font-weight: 500; color: {NEUTRAL_500}; }}
+
+    /* Custom legend list next to a donut_with_center chart (e.g. "Top agents by
+       premium") — Plotly's own legend doesn't show a %-of-total per slice cleanly. */
+    .azm-legend-list {{ display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.5rem; }}
+    .azm-legend-row {{ display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }}
+    .azm-legend-dot {{ width: 9px; height: 9px; border-radius: 9999px; flex-shrink: 0; }}
+    .azm-legend-name {{ flex: 1; color: {NEUTRAL_700}; }}
+    .azm-legend-value {{ font-weight: 600; color: {NEUTRAL_700}; }}
+    .azm-legend-pct {{ font-weight: 500; color: {NEUTRAL_500}; }}
 
     /* Styled table (st.table, used for short summary tables — see tables.styled_table) */
     [data-testid="stTable"] table {{ border-collapse: collapse; width: 100%; }}
