@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from src.components import charts, styles, tables
+from src.components import charts, skeleton, styles, tables
 from src.components.filters import current_date_filters
 from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
@@ -20,19 +20,17 @@ client = auth_api.require_client()
 filters = current_date_filters()
 styles.page_header("Azil · Motor Policies · Standard Overview", color=styles.TEAL_400)
 
-header_col, filter_col = st.columns([2, 1.3])
-with header_col:
-    styles.page_header(
-        "Overview", icon=styles.logo_icon_html(), subtitle=f"Date range: {filters['from']} → {filters['to']} (change it in the sidebar)"
-    )
-with filter_col:
-    user_status = st.segmented_control("User status", ["All Users", "Active Only", "Inactive Only"], default="All Users")
+styles.page_header(
+    "Overview", icon=styles.logo_icon_html(), subtitle=f"Date range: {filters['from']} → {filters['to']} (change it in the sidebar)"
+)
 
-policy_col, payment_col = st.columns(2)
+policy_col, payment_col, user_col = st.columns(3)
 with policy_col:
     policy_status = st.segmented_control("Policy status", ["All Policies", "Active Only", "Inactive Only"], default="All Policies")
 with payment_col:
     payment_status = st.segmented_control("Payment status", ["All", "Paid Only", "Unpaid Only"], default="All")
+with user_col:
+    user_status = st.segmented_control("User status", ["All Users", "Active Only", "Inactive Only"], default="All Users")
 
 
 def _filtered_covers(date_from: str, date_to: str) -> pd.DataFrame:
@@ -52,6 +50,10 @@ def _filtered_covers(date_from: str, date_to: str) -> pd.DataFrame:
         covers = covers[covers["id"].isin(paid_cover_ids)] if payment_status == "Paid Only" else covers[~covers["id"].isin(paid_cover_ids)]
     return covers
 
+
+kpi_placeholder = st.empty()
+with kpi_placeholder.container():
+    skeleton.kpi_row(4)
 
 cover_trends = loaders.fetch_cover_trends(client, filters)
 income_trends = loaders.fetch_income_trends(client, filters)
@@ -89,39 +91,40 @@ users_daily_df = daily_count(users, "created_at", "value") if "created_at" in us
 if not users_daily_df.empty:
     users_daily_df = users_daily_df.rename(columns={"day": "period"})
 
-kpi_cards_with_trend(
-    [
-        {
-            "label": "Policies (covers)",
-            "value": f"{policies_count:,}",
-            "icon": "🛡️",
-            "pct_change": pct_change(policies_count, prev_policies_count),
-            "trend_df": policies_count_df,
-        },
-        {
-            "label": "Premium volume (KES)",
-            "value": f"{premium_amount:,.0f}",
-            "icon": "🪙",
-            "pct_change": pct_change(premium_amount, prev_premium_amount),
-            "trend_df": premium_amount_df,
-        },
-        {
-            "label": "Azil Income (KES)",
-            "value": f"{income_totals.get('income', 0):,.0f}",
-            "icon": "📊",
-            "pct_change": pct_change(income_totals.get("income", 0), prev_income_totals.get("income", 0)),
-            "trend_df": income_df,
-        },
-        {
-            "label": "Users",
-            "value": f"{len(users):,}",
-            "icon": "👥",
-            "pct_change": pct_change(users_current_count, users_prev_count) if users_prev_count is not None else None,
-            "trend_df": users_daily_df,
-        },
-    ],
-    key_prefix="ov",
-)
+with kpi_placeholder.container():
+    kpi_cards_with_trend(
+        [
+            {
+                "label": "Policies (covers)",
+                "value": f"{policies_count:,}",
+                "icon": "🛡️",
+                "pct_change": pct_change(policies_count, prev_policies_count),
+                "trend_df": policies_count_df,
+            },
+            {
+                "label": "Premium volume (KES)",
+                "value": f"{premium_amount:,.0f}",
+                "icon": "🪙",
+                "pct_change": pct_change(premium_amount, prev_premium_amount),
+                "trend_df": premium_amount_df,
+            },
+            {
+                "label": "Azil Income (KES)",
+                "value": f"{income_totals.get('income', 0):,.0f}",
+                "icon": "📊",
+                "pct_change": pct_change(income_totals.get("income", 0), prev_income_totals.get("income", 0)),
+                "trend_df": income_df,
+            },
+            {
+                "label": "Users",
+                "value": f"{len(users):,}",
+                "icon": "👥",
+                "pct_change": pct_change(users_current_count, users_prev_count) if users_prev_count is not None else None,
+                "trend_df": users_daily_df,
+            },
+        ],
+        key_prefix="ov",
+    )
 
 st.divider()
 left, right = st.columns(2)

@@ -104,7 +104,7 @@ _CSS = f"""
         visibility: visible !important;
     }}
     .stMainBlockContainer {{
-        padding-top: calc(var(--azm-topbar-height, 4.75rem) + 1.25rem) !important;
+        padding-top: calc(var(--azm-topbar-height, 4.75rem) + 0.5rem) !important;
         margin-left: var(--azm-sidebar-width) !important;
         width: calc(100% - var(--azm-sidebar-width)) !important;
         max-width: calc(100% - var(--azm-sidebar-width)) !important;
@@ -305,6 +305,25 @@ _CSS = f"""
         right: 1.5rem;
         z-index: 1000;
     }}
+    [class*="st-key-azm_topbar_refresh"] {{
+        position: fixed;
+        top: calc((var(--azm-topbar-height) - 2.5rem) / 2);
+        left: calc(var(--azm-sidebar-width) + 7rem);
+        z-index: 1000;
+    }}
+    [class*="st-key-azm_topbar_refresh"] button {{
+        background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        color: rgba(255, 255, 255, 0.85) !important;
+        border-radius: 9999px !important;
+        font-weight: 600 !important;
+        font-size: 0.78rem !important;
+    }}
+    [class*="st-key-azm_topbar_refresh"] button:hover {{
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.4) !important;
+    }}
+    [class*="st-key-azm_topbar_refresh"] button p {{ color: inherit !important; }}
     [data-testid="stSidebarContent"] {{ padding-top: 0 !important; }}
     [data-testid="stSidebarUserContent"] {{ padding-top: 0 !important; }}
     .azm-topbar-label {{
@@ -387,6 +406,28 @@ _CSS = f"""
     .azm-page-header .azm-icon img {{ width: 1.9rem; height: 1.9rem; object-fit: contain; display: block; }}
     .azm-page-title {{ font-size: 1.9rem; font-weight: 700; color: {HEADING_COLOR}; margin: 0; line-height: 1.2; }}
     .azm-page-subtitle {{ color: {NEUTRAL_500}; font-size: 0.9rem; margin-top: 0.15rem; }}
+
+    /* Skeleton loaders (src/components/skeleton.py) — shimmering placeholders shown in
+       an st.empty() slot while a page's slower data calls are still running. */
+    @keyframes azm-shimmer {{
+        0% {{ background-position: -200% 0; }}
+        100% {{ background-position: 200% 0; }}
+    }}
+    .azm-skeleton {{
+        background: linear-gradient(90deg, {NEUTRAL_200} 25%, {NEUTRAL_100} 50%, {NEUTRAL_200} 75%);
+        background-size: 200% 100%;
+        animation: azm-shimmer 1.4s ease-in-out infinite;
+        border-radius: 0.4rem;
+    }}
+    .azm-skeleton-card {{
+        border-radius: 0.75rem;
+        border: 1px solid {NEUTRAL_200};
+        padding: 1.1rem 1.25rem;
+    }}
+    .azm-skeleton-circle {{ width: 2.4rem; height: 2.4rem; border-radius: 9999px; }}
+    .azm-skeleton-line {{ height: 0.9rem; }}
+    .azm-skeleton-block {{ width: 100%; border-radius: 0.75rem; }}
+    .azm-skeleton-table {{ border-radius: 0.75rem; border: 1px solid {NEUTRAL_200}; padding: 1rem 1.25rem; }}
 
     /* KPI cards */
     .azm-kpi-card {{
@@ -627,7 +668,7 @@ _LOGIN_MODE_CSS = f"""
     [data-testid="stSidebar"] {{ display: none !important; }}
     .stApp {{ background-color: {NEUTRAL_200}; }}
     .stMainBlockContainer {{
-        padding-top: 2rem !important;
+        padding-top: 1rem !important;
         margin-left: 0 !important;
         width: 100% !important;
         max-width: 100% !important;

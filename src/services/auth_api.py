@@ -74,11 +74,14 @@ def _render_orphaned_page_notice() -> None:
     real full-page reload of the root URL instead, which is the actual fix (it makes
     app.py run first), and doesn't depend on that registry at all.
     """
+    # A soft st.rerun() can't fix this — the current run is already "stuck" treating this
+    # sub-page as the active script, independent of app.py, so rerunning it just repeats
+    # the same broken state. Only a real browser navigation to "/" forces app.py to run
+    # from scratch. <meta refresh> triggers that automatically after a short delay, so
+    # the user doesn't have to click — the link below is just the immediate fallback.
+    st.markdown('<meta http-equiv="refresh" content="1; url=/">', unsafe_allow_html=True)
     styles.page_header("Sign in required", icon="🔒", subtitle="Your session isn't active on this page yet.")
-    st.info(
-        "If you just restarted the app, this can happen when a browser tab is still on an old page "
-        "link. Click below for a full reload from the start — refreshing this exact page won't fix it."
-    )
+    st.info("Reloading from the start automatically — click below if it doesn't happen within a second.")
     st.markdown(
         '<a href="/" target="_self" style="display:inline-block; padding:0.5rem 1.25rem; '
         f'border-radius:0.5rem; background:{styles.BRAND_600}; color:#ffffff; font-weight:600; '

@@ -103,4 +103,13 @@ def render() -> None:
             auth_api.logout()
             st.switch_page("pages/0_Login.py")
 
+        # Clears all @st.cache_data (covers/payments/trends/etc.) and reruns, without
+        # touching st.session_state — the auth token lives there, not in the data cache,
+        # so this can never log the user out. Independently fixed-positioned like Sign
+        # Out, for the same reason (a single widget is safe; mixing widgets into the
+        # topbar's HTML flex row via st.columns previously broke the layout).
+        if st.button("Refresh Data", key="azm_topbar_refresh", icon=":material/refresh:"):
+            st.cache_data.clear()
+            st.rerun()
+
     page.run()
