@@ -40,10 +40,14 @@ USERS_PAGES = [
 
 
 def build_pages() -> list[st.Page]:
+    # Login must always be part of the registered page list, even when authenticated —
+    # st.switch_page() can only target a page that was already registered via this run's
+    # st.navigation() call. Excluding it while logged in (the old behavior) meant clicking
+    # Sign Out/Logout — which clears session state and then calls
+    # st.switch_page("pages/0_Login.py") in the same run — failed with "Could not find
+    # page", since that run's registry, built before logout(), never included Login.
     authenticated = auth_api.is_authenticated()
-    pages = []
-    if not authenticated:
-        pages.append(st.Page("pages/0_Login.py", title="Login", icon=":material/login:", default=True))
+    pages = [st.Page("pages/0_Login.py", title="Login", icon=":material/login:", default=not authenticated)]
     first = True
     for label, path, icon in POLICIES_PAGES + USERS_PAGES:
         pages.append(st.Page(path, title=label, icon=icon, default=authenticated and first))

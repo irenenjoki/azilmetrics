@@ -196,6 +196,7 @@ _CSS = f"""
     .azm-sidebar-user-card .azm-user-name {{ color: #ffffff; font-weight: 600; font-size: 0.9rem; line-height: 1.2; }}
     .azm-sidebar-user-card .azm-user-email {{ color: rgba(255, 255, 255, 0.55); font-size: 0.75rem; }}
 
+    [class*="st-key-azm_logout"] {{ margin-top: 0.75rem; }}
     [class*="st-key-azm_logout"] button {{
         background: transparent !important;
         border: none !important;
@@ -295,6 +296,7 @@ _CSS = f"""
         padding: 0 8rem 0 1.5rem;
     }}
     .azm-topbar-right {{ display: flex; align-items: center; gap: 1.75rem; }}
+    .azm-topbar-sep {{ display: flex; align-items: center; color: {ACCENT}; font-size: 1.1rem; line-height: 1; }}
     [class*="st-key-azm_topbar_logout"] {{
         position: fixed;
         top: calc((var(--azm-topbar-height) - 2.5rem) / 2);
@@ -666,10 +668,12 @@ def topbar(
             <div class="azm-topbar-label">{label}</div>
             <div class="azm-topbar-right">
                 <div class="azm-topbar-badge azm-topbar-badge-{state}"><span class="azm-topbar-dot"></span>{status_text}</div>
+                <span class="azm-topbar-sep">◆</span>
                 <div class="azm-topbar-identity">
                     <div class="azm-topbar-name">{name or "Admin"}</div>
                     {sub_html}
                 </div>
+                <span class="azm-topbar-sep">◆</span>
             </div>
         </div>
         """
