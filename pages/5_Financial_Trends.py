@@ -3,7 +3,7 @@ import streamlit as st
 
 from src.components import charts, styles
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import extract_trend_df, resample_period
 from src.services import auth_api
@@ -28,13 +28,14 @@ renewal_trends = loaders.fetch_renewal_trends(client, {**filters, "granularity":
 cover_totals = cover_trends.get("totals", {}) or {}
 income_totals = income_trends.get("totals", {}) or {}
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Premium volume (KES)", f"{cover_totals.get('amount', 0):,.0f}"),
-        ("Azil Income (KES)", f"{income_totals.get('income', 0):,.0f}"),
-        ("Expiring covers", f"{(expiration_trends.get('totals', {}) or {}).get('count', 0):,}"),
-        ("Renewed covers", f"{(renewal_trends.get('totals', {}) or {}).get('count', 0):,}"),
-    ]
+        {"label": "Premium volume (KES)", "value": f"{cover_totals.get('amount', 0):,.0f}", "icon": "🪙"},
+        {"label": "Azil Income (KES)", "value": f"{income_totals.get('income', 0):,.0f}", "icon": "📊"},
+        {"label": "Expiring covers", "value": f"{(expiration_trends.get('totals', {}) or {}).get('count', 0):,}", "icon": "⏳"},
+        {"label": "Renewed covers", "value": f"{(renewal_trends.get('totals', {}) or {}).get('count', 0):,}", "icon": "🔄"},
+    ],
+    key_prefix="ft",
 )
 
 st.divider()

@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import charts, styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import flatten_underwriter_trends, resample_period
 from src.services import auth_api
@@ -38,12 +38,13 @@ else:
         else flat
     )
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Underwriters", f"{len(underwriters):,}"),
-        ("Total premium (KES)", f"{flat['amount'].sum():,.0f}" if not flat.empty else "0"),
-        ("Total income (KES)", f"{flat['income'].sum():,.0f}" if not flat.empty else "0"),
-    ]
+        {"label": "Underwriters", "value": f"{len(underwriters):,}", "icon": "🏢"},
+        {"label": "Total premium (KES)", "value": f"{flat['amount'].sum():,.0f}" if not flat.empty else "0", "icon": "🪙"},
+        {"label": "Total income (KES)", "value": f"{flat['income'].sum():,.0f}" if not flat.empty else "0", "icon": "📊"},
+    ],
+    key_prefix="uw",
 )
 
 st.divider()

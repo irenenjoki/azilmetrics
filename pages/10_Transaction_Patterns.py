@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import charts, styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import daily_sum, filter_by_date_range, success_rate, value_counts_df
 from src.services import auth_api
@@ -22,12 +22,13 @@ stk = filter_by_date_range(loaders.fetch_stk_responses(client), "created_at", fi
 success_amount = payments.loc[payments.get("status") == "success", "amount"].sum() if not payments.empty else 0
 stk_rate = success_rate(stk, "ResultCode", "0")
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Payments", f"{len(payments):,}"),
-        ("Successful amount (KES)", f"{success_amount:,.0f}"),
-        ("STK success rate", f"{stk_rate:.1f}%" if stk_rate is not None else "n/a"),
-    ]
+        {"label": "Payments", "value": f"{len(payments):,}", "icon": "💳"},
+        {"label": "Successful amount (KES)", "value": f"{success_amount:,.0f}", "icon": "🪙"},
+        {"label": "STK success rate", "value": f"{stk_rate:.1f}%" if stk_rate is not None else "n/a", "icon": "✅"},
+    ],
+    key_prefix="tp",
 )
 
 st.divider()

@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import filter_by_date_range
 from src.services import auth_api
@@ -35,15 +35,17 @@ if id_col and paid_cover_ids:
 else:
     inactive_and_paid = inactive_covers.iloc[0:0]
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Inactive covers in range", f"{len(inactive_covers):,}"),
-        ("Inactive but paid", f"{len(inactive_and_paid):,}"),
-        (
-            "Premium tied up (KES)",
-            f"{inactive_and_paid['amount'].sum():,.0f}" if "amount" in inactive_and_paid.columns and not inactive_and_paid.empty else "0",
-        ),
-    ]
+        {"label": "Inactive covers in range", "value": f"{len(inactive_covers):,}", "icon": "⛔"},
+        {"label": "Inactive but paid", "value": f"{len(inactive_and_paid):,}", "icon": "⚠️"},
+        {
+            "label": "Premium tied up (KES)",
+            "value": f"{inactive_and_paid['amount'].sum():,.0f}" if "amount" in inactive_and_paid.columns and not inactive_and_paid.empty else "0",
+            "icon": "🪙",
+        },
+    ],
+    key_prefix="ipr",
 )
 
 st.divider()

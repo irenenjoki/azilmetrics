@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src.components import styles, tables
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import find_customer_id_column
 from src.services import auth_api
@@ -48,12 +48,17 @@ elif cover_id_col and "cover_id" in payments.columns and not user_covers.empty:
 else:
     user_payments = payments.iloc[0:0]
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Policies held", f"{len(user_covers):,}"),
-        ("Total premium (KES)", f"{user_covers['amount'].sum():,.0f}" if "amount" in user_covers.columns else "n/a"),
-        ("Payments made", f"{len(user_payments):,}"),
-    ]
+        {"label": "Policies held", "value": f"{len(user_covers):,}", "icon": "🛡️"},
+        {
+            "label": "Total premium (KES)",
+            "value": f"{user_covers['amount'].sum():,.0f}" if "amount" in user_covers.columns else "n/a",
+            "icon": "🪙",
+        },
+        {"label": "Payments made", "value": f"{len(user_payments):,}", "icon": "💳"},
+    ],
+    key_prefix="ppu",
 )
 
 st.divider()

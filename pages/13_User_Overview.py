@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import charts, styles
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import daily_count, filter_by_date_range, value_counts_df
 from src.services import auth_api
@@ -33,13 +33,14 @@ else:
 
 new_in_range = filter_by_date_range(users, "created_at", filters["from"], filters["to"]).shape[0] if not users.empty else 0
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Total accounts", f"{len(users):,}"),
-        ("Customers", f"{customer_count:,}" if customer_count is not None else "n/a"),
-        ("Active accounts", f"{active_count:,}" if active_count is not None else "n/a"),
-        ("New signups in range", f"{new_in_range:,}"),
-    ]
+        {"label": "Total accounts", "value": f"{len(users):,}", "icon": "👤"},
+        {"label": "Customers", "value": f"{customer_count:,}" if customer_count is not None else "n/a", "icon": "👥"},
+        {"label": "Active accounts", "value": f"{active_count:,}" if active_count is not None else "n/a", "icon": "✅"},
+        {"label": "New signups in range", "value": f"{new_in_range:,}", "icon": "🆕"},
+    ],
+    key_prefix="uo",
 )
 
 st.divider()

@@ -3,7 +3,7 @@ import streamlit as st
 
 from src.components import charts, styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import filter_by_date_range, find_customer_id_column, link_customers_via_vehicles
 from src.services import auth_api
@@ -102,14 +102,19 @@ new_customers = int((customers["segment"] == "New").sum())
 repeat_customers = int((customers["segment"] == "Repeat").sum())
 peak = monthly_new.loc[monthly_new["New Customers"].idxmax()] if not monthly_new.empty else None
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Total Customers", f"{total_customers:,}"),
-        ("New Customers", f"{new_customers:,}"),
-        ("Repeat Customers", f"{repeat_customers:,}"),
-        ("Peak Month", peak["month"] if peak is not None else "n/a"),
+        {"label": "Total Customers", "value": f"{total_customers:,}", "icon": "👥"},
+        {"label": "New Customers", "value": f"{new_customers:,}", "icon": "✨"},
+        {"label": "Repeat Customers", "value": f"{repeat_customers:,}", "icon": "🔁"},
+        {
+            "label": "Peak Month",
+            "value": peak["month"] if peak is not None else "n/a",
+            "icon": "📈",
+            "subtitle": f"{int(peak['New Customers']):,} new" if peak is not None else "",
+        },
     ],
-    subtitles=["", "", "", f"{int(peak['New Customers']):,} new" if peak is not None else ""],
+    key_prefix="ca_top",
 )
 
 st.divider()
@@ -134,11 +139,12 @@ with tab_new_repeat:
 with tab_drill:
     selected_month = st.selectbox("Select a month", monthly_new["month"].tolist()[::-1])
     month_customers = customers[customers["month"] == selected_month]
-    kpi_row(
+    kpi_cards_with_trend(
         [
-            ("New customers this month", f"{len(month_customers):,}"),
-            ("Of which repeat by range-end", f"{(month_customers['segment'] == 'Repeat').sum():,}"),
-        ]
+            {"label": "New customers this month", "value": f"{len(month_customers):,}", "icon": "✨"},
+            {"label": "Of which repeat by range-end", "value": f"{(month_customers['segment'] == 'Repeat').sum():,}", "icon": "🔁"},
+        ],
+        key_prefix="ca_drill",
     )
     tables.paginated_table(month_customers, key="drill_down_table")
 

@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.services import auth_api
 
@@ -24,12 +24,13 @@ underwriter_ranks = loaders.fetch_underwriter_ranks(client, filters)
 cover_totals = cover_trends.get("totals", {}) or {}
 income_totals = income_trends.get("totals", {}) or {}
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Policies", f"{cover_totals.get('count', 0):,}"),
-        ("Premium volume (KES)", f"{cover_totals.get('amount', 0):,.0f}"),
-        ("Azil Income (KES)", f"{income_totals.get('income', 0):,.0f}"),
-    ]
+        {"label": "Policies", "value": f"{cover_totals.get('count', 0):,}", "icon": "🛡️"},
+        {"label": "Premium volume (KES)", "value": f"{cover_totals.get('amount', 0):,.0f}", "icon": "🪙"},
+        {"label": "Azil Income (KES)", "value": f"{income_totals.get('income', 0):,.0f}", "icon": "📊"},
+    ],
+    key_prefix="cr",
 )
 
 st.caption("This report bundles the period's key tables into one downloadable workbook.")

@@ -3,7 +3,7 @@ import streamlit as st
 
 from src.components import charts, styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import extract_trend_df, filter_by_date_range, resample_period
 from src.services import auth_api
@@ -87,13 +87,18 @@ def _render_metric_tab(df, value_col: str, value_label: str, kpi_prefix: str, ch
         st.info("No data for this selection.")
         return
     monthly, total_value, total_policies, peak = monthly_result
-    kpi_row(
+    kpi_cards_with_trend(
         [
-            (f"Total {kpi_prefix} (KES)", f"{total_value:,.0f}"),
-            ("Total Policies", f"{total_policies:,}"),
-            ("Peak Month", peak["Month"] if peak is not None else "n/a"),
+            {"label": f"Total {kpi_prefix} (KES)", "value": f"{total_value:,.0f}", "icon": "🪙"},
+            {"label": "Total Policies", "value": f"{total_policies:,}", "icon": "🛡️"},
+            {
+                "label": "Peak Month",
+                "value": peak["Month"] if peak is not None else "n/a",
+                "icon": "📈",
+                "subtitle": f"KES {peak[value_label]:,.0f}" if peak is not None else "",
+            },
         ],
-        subtitles=["", "", f"KES {peak[value_label]:,.0f}" if peak is not None else ""],
+        key_prefix=chart_key,
     )
     st.divider()
     st.subheader(f"{kpi_prefix} per Month")
@@ -122,7 +127,10 @@ with tab_income:
         trend_filters["status"] = "active"
     income_trends = loaders.fetch_income_trends(client, trend_filters)
     income_totals = income_trends.get("totals", {}) or {}
-    kpi_row([("Total Azil Income (KES)", f"{income_totals.get('income', 0):,.0f}")])
+    kpi_cards_with_trend(
+        [{"label": "Total Azil Income (KES)", "value": f"{income_totals.get('income', 0):,.0f}", "icon": "📊"}],
+        key_prefix="fm_income",
+    )
     st.divider()
     st.subheader(f"Azil Income — {view_by.lower()} trend")
     income_df = extract_trend_df(income_trends, value_candidates=("income", "total", "amount"))
@@ -137,13 +145,22 @@ with tab_paid:
     is_paid = covers["id"].isin(paid_cover_ids) if "id" in covers.columns else covers.index < 0
     paid_covers = covers[is_paid]
     unpaid_covers = covers[~is_paid]
-    kpi_row(
+    kpi_cards_with_trend(
         [
-            ("Paid policies", f"{len(paid_covers):,}"),
-            ("Unpaid policies", f"{len(unpaid_covers):,}"),
-            ("Paid amount (KES)", f"{paid_covers['amount'].sum():,.0f}" if "amount" in paid_covers.columns else "n/a"),
-            ("Unpaid amount (KES)", f"{unpaid_covers['amount'].sum():,.0f}" if "amount" in unpaid_covers.columns else "n/a"),
-        ]
+            {"label": "Paid policies", "value": f"{len(paid_covers):,}", "icon": "✅"},
+            {"label": "Unpaid policies", "value": f"{len(unpaid_covers):,}", "icon": "⏳"},
+            {
+                "label": "Paid amount (KES)",
+                "value": f"{paid_covers['amount'].sum():,.0f}" if "amount" in paid_covers.columns else "n/a",
+                "icon": "🪙",
+            },
+            {
+                "label": "Unpaid amount (KES)",
+                "value": f"{unpaid_covers['amount'].sum():,.0f}" if "amount" in unpaid_covers.columns else "n/a",
+                "icon": "🪙",
+            },
+        ],
+        key_prefix="fm_paid",
     )
     st.divider()
     breakdown = None

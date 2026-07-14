@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import charts, styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import filter_by_date_range
 from src.services import auth_api
@@ -46,13 +46,18 @@ total_policies = len(covers)
 num_months = monthly["month"].nunique()
 peak_row = monthly.loc[monthly["count"].idxmax()] if not monthly.empty else None
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Total Policies", f"{total_policies:,}"),
-        ("Months", f"{num_months:,}"),
-        ("Peak Month", peak_row["month_label"] if peak_row is not None else "n/a"),
+        {"label": "Total Policies", "value": f"{total_policies:,}", "icon": "🛡️"},
+        {"label": "Months", "value": f"{num_months:,}", "icon": "🗓️"},
+        {
+            "label": "Peak Month",
+            "value": peak_row["month_label"] if peak_row is not None else "n/a",
+            "icon": "📈",
+            "subtitle": f"{int(peak_row['count']):,} policies" if peak_row is not None else "",
+        },
     ],
-    subtitles=["", "", f"{int(peak_row['count']):,} policies" if peak_row is not None else ""],
+    key_prefix="pbm_top",
 )
 
 st.divider()
@@ -72,11 +77,16 @@ with tab_single_month:
     selected_month = st.selectbox("Select a month", monthly["month_label"].tolist()[::-1])
     month_covers = covers[covers["month"].astype(str) == selected_month]
 
-    kpi_row(
+    kpi_cards_with_trend(
         [
-            ("Policies this month", f"{len(month_covers):,}"),
-            ("Premium volume (KES)", f"{month_covers['amount'].sum():,.0f}" if "amount" in month_covers.columns else "n/a"),
-        ]
+            {"label": "Policies this month", "value": f"{len(month_covers):,}", "icon": "🛡️"},
+            {
+                "label": "Premium volume (KES)",
+                "value": f"{month_covers['amount'].sum():,.0f}" if "amount" in month_covers.columns else "n/a",
+                "icon": "🪙",
+            },
+        ],
+        key_prefix="pbm_month",
     )
 
     if "channel" in month_covers.columns:

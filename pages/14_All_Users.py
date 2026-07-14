@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src.components import styles, tables
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.services import auth_api
 
@@ -40,11 +40,12 @@ if status_filter != "all" and status_col:
 if type_filter != "all" and type_col:
     filtered = filtered[filtered[type_col].astype(str) == type_filter]
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Total users", f"{len(users):,}"),
-        ("Matching filters", f"{len(filtered):,}"),
-    ]
+        {"label": "Total users", "value": f"{len(users):,}", "icon": "👥"},
+        {"label": "Matching filters", "value": f"{len(filtered):,}", "icon": "🔍"},
+    ],
+    key_prefix="au",
 )
 
 st.divider()

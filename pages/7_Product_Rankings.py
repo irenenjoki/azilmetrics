@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.components import charts, styles, tables
 from src.components.filters import current_date_filters
-from src.components.metrics import kpi_row
+from src.components.metrics import kpi_cards_with_trend
 from src.data import loaders
 from src.data.transforms import value_counts_df
 from src.services import auth_api
@@ -26,12 +26,13 @@ if not products.empty and not underwriters.empty and "underwriter_id" in product
     uw_lookup = underwriters.set_index("id")["name"]
     products["underwriter_name"] = products["underwriter_id"].map(uw_lookup)
 
-kpi_row(
+kpi_cards_with_trend(
     [
-        ("Products", f"{len(products):,}"),
-        ("Underwriters", f"{len(underwriters):,}"),
-        ("Products with sales this range", f"{len(product_sales):,}"),
-    ]
+        {"label": "Products", "value": f"{len(products):,}", "icon": "📦"},
+        {"label": "Underwriters", "value": f"{len(underwriters):,}", "icon": "🏢"},
+        {"label": "Products with sales this range", "value": f"{len(product_sales):,}", "icon": "📈"},
+    ],
+    key_prefix="pr",
 )
 
 st.divider()

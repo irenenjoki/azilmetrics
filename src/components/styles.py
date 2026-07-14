@@ -429,15 +429,9 @@ _CSS = f"""
     .azm-skeleton-block {{ width: 100%; border-radius: 0.75rem; }}
     .azm-skeleton-table {{ border-radius: 0.75rem; border: 1px solid {NEUTRAL_200}; padding: 1rem 1.25rem; }}
 
-    /* KPI cards */
-    .azm-kpi-card {{
-        border-radius: 0.75rem;
-        border: 1px solid {NEUTRAL_200};
-        padding: 1.1rem 1.25rem;
-        box-shadow: 0 1px 2px rgba(10, 15, 44, 0.05);
-        background: linear-gradient(to bottom right, var(--azm-grad-from, {NEUTRAL_100}), #ffffff);
-        height: 100%;
-    }}
+    /* KPI cards (src/components/metrics.py's kpi_cards_with_trend — the one visual
+       standard every page's KPIs use; see .azm-skeleton-card above for its loading
+       placeholder, and [class*="st-key-azmkpiv2_"] below for the card chrome itself). */
     .azm-kpi-label {{
         font-size: 0.72rem;
         font-weight: 600;
@@ -447,7 +441,6 @@ _CSS = f"""
         margin-bottom: 0.4rem;
     }}
     .azm-kpi-value {{ font-size: 1.75rem; font-weight: 700; color: {KPI_VALUE_COLOR}; }}
-    .azm-kpi-sub {{ font-size: 0.75rem; color: {NEUTRAL_500}; margin-top: 0.3rem; }}
 
     /* Icon-badged KPI cards with a trend sparkline (metrics.kpi_cards_with_trend) — the
        container itself (not an inner div) carries the card chrome, since a live Plotly
